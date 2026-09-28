@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  # 1. Unser Web-Server (Node.js)
+  web-app:
+    build: .                          # Sagt Compose, dass das Dockerfile im aktuellen Ordner liegt
+    container_name: web-app
+    ports:
+      - "3000:3000"                   # Leitet Port 3000 an Windows weiter
+    volumes:
+      - .:/app                        # Unser Entwickler-Trick (Live-Code-Spiegelung)
+    depends_on:
+      - mein-datenbank-container      # Startet die App erst, WENN die Datenbank läuft
+
+  # 2. Unsere Datenbank (MongoDB)
+  mein-datenbank-container:
+    image: mongo:4.4                  # Nutzt die funktionierende Version 4.4
+    container_name: mein-datenbank-container
+    ports:
+      - "27017:27017"
+
+# Docker Compose erstellt automatisch ein gemeinsames Netzwerk für alle Services hier drin!

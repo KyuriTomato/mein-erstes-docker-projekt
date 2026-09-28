@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Docker & Bootstrap Projekt</title>
+    <link href="/bootstrap.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light d-flex align-items-center justify-content-center vh-100">
+
+    <div class="card bg-secondary text-white shadow-lg text-center" style="max-width: 400px; width: 100%;">
+        <div class="card-header bg-primary text-uppercase font-monospace">
+            Docker Multi-User System
+        </div>
+        <div class="card-body my-3">
+            <!-- NEU: Das Eingabefeld für den Namen -->
+            <div class="mb-3 text-start">
+                <label for="nameInput" class="form-label fw-bold">Dein Name:</label>
+                <input type="text" id="nameInput" class="form-control" value="Gast" placeholder="Namen eingeben...">
+            </div>
+
+            <h5 class="card-title h3 mb-2">Hallo <span id="spielerName" class="text-info">Gast</span>!</h5>
+            <p class="fs-4 my-3">Deine Klicks: <span id="klickZaehler" class="badge bg-warning text-dark">0</span></p>
+            
+            <button id="klickButton" class="btn btn-info btn-lg mt-2 fw-bold text-dark shadow-sm w-100">Klick mich!</button>
+            <button id="resetButton" class="btn btn-danger btn-sm mt-3 fw-bold shadow-sm w-100">Zähler zurücksetzen</button>
+        </div>
+        <div class="card-footer text-light-50 small">
+            Datenbank-Profile aktiv
+        </div>
+    </div>
+
+    <script>
+        const button = document.getElementById('klickButton');
+        const resetButton = document.getElementById('resetButton');
+        const anzeige = document.getElementById('klickZaehler');
+        const nameInput = document.getElementById('nameInput');
+        const spielerNameAnzeige = document.getElementById('spielerName');
+
+        // Hilfsfunktion: Gibt den aktuell eingetippten Namen zurück
+        function aktuellemName() {
+            return nameInput.value.trim() || 'Gast';
+        }
+
+        // Funktion 1: Zählerstand für den aktuellen Namen aus der Datenbank holen
+        async function ladeZaehlerstand() {
+            const name = aktuellemName();
+            spielerNameAnzeige.innerText = name;
+            try {
+                const response = await fetch(`/api/klicks?name=${encodeURIComponent(name)}`);
+                const data = await response.json();
+                anzeige.innerText = data.anzahl;
+            } catch (error) {
+                console.error('Fehler beim Laden:', error);
+            }
+        }
+
+        // Funktion 2: Klick erhöhen für diesen Namen
+        button.addEventListener('click', async () => {
+            const name = aktuellemName();
+            try {
+                const response = await fetch(`/api/klick-erhoehen?name=${encodeURIComponent(name)}`, { method: 'POST' });
+                const data = await response.json();
+                anzeige.innerText = data.anzahl;
+            } catch (error) {
+                console.error('Fehler beim Erhöhen:', error);
+            }
+        });
+
+        // Funktion 3: Reset für diesen Namen
+        resetButton.addEventListener('click', async () => {
+            const name = aktuellemName();
+            try {
+                const response = await fetch(`/api/klick-reset?name=${encodeURIComponent(name)}`, { method: 'POST' });
+                const data = await response.json();
+                anzeige.innerText = data.anzahl;
+            } catch (error) {
+                console.error('Fehler beim Reset:', error);
+            }
+        });
+
+        // NEU: Wenn man einen anderen Namen eintippt, sofort die Daten aus der Datenbank nachladen
+        nameInput.addEventListener('input', ladeZaehlerstand);
+
+        // Beim ersten Laden starten
+        ladeZaehlerstand();
+    </script>
+</body>
+</html>
